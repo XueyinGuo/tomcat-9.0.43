@@ -602,7 +602,7 @@ public class Catalina {
 
         if (serverXml != null) {
             serverXml.load(this);
-        } else {
+        } else { /* 获取到 server。xml 开始解析 */
             try (ConfigurationSource.Resource resource = ConfigFileLoader.getSource().getServerXml()) {
                 // Create and execute our Digester
                 Digester digester = start ? createStartDigester() : createStopDigester();
@@ -706,7 +706,7 @@ public class Catalina {
         initNaming();
 
         // Parse main server.xml
-        parseServerXml(true);
+        parseServerXml(true); /* 解析 server。xml */
         Server s = getServer();
         if (s == null) {
             return;

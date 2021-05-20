@@ -141,6 +141,7 @@ public final class Bootstrap {
 
     private void initClassLoaders() {
         try {
+            /* 用刚刚获得的类目录 创建URL类加载器，父类加载器为 APP，加载目录下所有的 jar */
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.
@@ -166,7 +167,7 @@ public final class Bootstrap {
         value = replace(value);
 
         List<Repository> repositories = new ArrayList<>();
-
+        /* 获取到 类加载目录 */
         String[] repositoryPaths = getPaths(value);
 
         for (String repository : repositoryPaths) {
@@ -191,7 +192,7 @@ public final class Bootstrap {
                 repositories.add(new Repository(repository, RepositoryType.DIR));
             }
         }
-
+        /* 用刚刚获得的类目录 创建URL类加载器，父类加载器为 APP，加载目录下所有的 jar */
         return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 
@@ -247,7 +248,7 @@ public final class Bootstrap {
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
-
+        /* 创建URL类加载器，用于加载 /lib/*.jar， 并把 sharedLoader catalinaLoader commonLoader 设置为统一引用  */
         initClassLoaders();
 
         Thread.currentThread().setContextClassLoader(catalinaLoader);
@@ -259,7 +260,10 @@ public final class Bootstrap {
             log.debug("Loading startup class");
         Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
         Object startupInstance = startupClass.getConstructor().newInstance();
-
+        /*
+        * 用新创建的 classLoader 加载 Catalina，并用反射创建实例，然后继续设置 实例的 父类加载器为 shared
+        * 虽然默认情况下 shared 和 common catalina 类加载器是同一个 ，但是【防止自己配置了 shared 类加载器】
+        * */
         // Set the shared extensions class loader
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
@@ -437,7 +441,7 @@ public final class Bootstrap {
         synchronized (daemonLock) {
             if (daemon == null) {
                 // Don't set daemon until init() has completed
-                Bootstrap bootstrap = new Bootstrap();
+                Bootstrap bootstrap = new Bootstrap(); /* ClassLoader commonLoader = null; ClassLoader catalinaLoader = null ClassLoader sharedLoader = null; */
                 try {
                     bootstrap.init();
                 } catch (Throwable t) {
@@ -469,7 +473,7 @@ public final class Bootstrap {
                 daemon.stop();
             } else if (command.equals("start")) {
                 daemon.setAwait(true);
-                daemon.load(args);
+                daemon.load(args); /* 反射调用 Catalina 的 load 方法 */
                 daemon.start();
                 if (null == daemon.getServer()) {
                     System.exit(1);

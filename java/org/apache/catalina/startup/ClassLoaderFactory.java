@@ -168,14 +168,14 @@ public final class ClassLoaderFactory {
                     set.add(url);
                 } else if (repository.getType() == RepositoryType.DIR) {
                     File directory = new File(repository.getLocation());
-                    directory = directory.getCanonicalFile();
+                    directory = directory.getCanonicalFile(); /* 找到 lib/ 下的所有 jar */
                     if (!validateFile(directory, RepositoryType.DIR)) {
                         continue;
                     }
                     URL url = buildClassLoaderUrl(directory);
                     if (log.isDebugEnabled())
                         log.debug("  Including directory " + url);
-                    set.add(url);
+                    set.add(url); /* 把 lib/ 这个文件夹 加到 set */
                 } else if (repository.getType() == RepositoryType.JAR) {
                     File file=new File(repository.getLocation());
                     file = file.getCanonicalFile();
@@ -211,7 +211,7 @@ public final class ClassLoaderFactory {
                         if (log.isDebugEnabled())
                             log.debug("    Including glob jar file "
                                     + file.getAbsolutePath());
-                        URL url = buildClassLoaderUrl(file);
+                        URL url = buildClassLoaderUrl(file); /* 把 lib/ 下所有的 jar 拼接成本机的绝对路径 加到 set 中 */
                         set.add(url);
                     }
                 }
@@ -228,7 +228,7 @@ public final class ClassLoaderFactory {
         return AccessController.doPrivileged(
                 (PrivilegedAction<URLClassLoader>) () -> {
                     if (parent == null)
-                        return new URLClassLoader(array);
+                        return new URLClassLoader(array); /* 创建 URL类加载器，父类加载器赋值为 AppClassLoader */
                     else
                         return new URLClassLoader(array, parent);
                 });
